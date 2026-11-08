@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#101010">
+<title>Tap Criminal</title>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background: #101010;
+    color: white;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.app {
+    max-width: 480px;
+    margin: auto;
+    padding: 20px;
+    padding-bottom: 100px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.logo {
+    color: #f5c542;
+    font-size: 23px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.level {
+    background: #252117;
+    color: #f5c542;
+    padding: 9px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+}
+
+.profile {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.profile h2 {
+    font-size: 19px;
+    margin-bottom: 8px;
+}
+
+.profile p {
+    color: #777;
+    font-size: 13px;
+}
+
+.balance {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.balance small {
+    color: #999;
+    font-size: 13px;
+}
+
+.money {
+    font-size: 43px;
+    font-weight: 900;
+    color: #f5c542;
+    margin-top: 8px;
+}
+
+.tap-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 35px 0;
+}
+
+.tap-button {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 5px solid #8c6a1c;
+    background: radial-gradient(circle, #3c3219, #17140e);
+    box-shadow: 0 0 40px #c99b2733,
+                inset 0 0 35px #e5b52b22;
+    color: #f5c542;
+    font-size: 55px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform .08s;
+    user-select: none;
+}
+
+.tap-button:active {
+    transform: scale(.92);
+}
+
+.tap-button span {
+    display: block;
+    font-size: 15px;
+    margin-top: 8px;
+    letter-spacing: 3px;
+}
+
+.energy {
+    margin-top: 25px;
+}
+
+.energy-info {
+    display: flex;
+    justify-content: space-between;
+    color: #aaa;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.energy-bar {
+    height: 10px;
+    background: #292929;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.energy-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #e7a927, #ffe28a);
+    border-radius: 20px;
+    transition: width .2s;
+}
+
+.section-title {
+    font-size: 20px;
+    margin: 35px 0 15px;
+}
+
+.shop-item {
+    display: flex;
+    align-items: center;
+    background: #1b1b1b;
+    border: 1px solid #303030;
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 12px;
+    gap: 13px;
+}
+
+.shop-icon {
+    font-size: 30px;
+}
+
+.shop-info {
+    flex: 1;
+}
+
+.shop-info h3 {
+    font-size: 15px;
+    margin-bottom: 5px;
+}
+
+.shop-info p {
+    color: #999;
+    font-size: 12px;
+}
+
+.buy {
+    background: #d9a82d;
+    color: #17120a;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.buy:active {
+    transform: scale(.94);
+}
+
+.nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #171717;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: space-around;
+    padding: 15px 0 calc(15px + env(safe-area-inset-bottom));
+    z-index: 10;
+}
+
+.nav button {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.nav button.active {
+    color: #f5c542;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.float {
+    position: fixed;
+    color: #f5c542;
+    font-size: 24px;
+    font-weight: bold;
+    pointer-events: none;
+    animation: rise .7s ease-out forwards;
+    z-index: 20;
+}
+
+@keyframes rise {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-90px);
+    }
+}
+
+.card {
+    background: #1b1b1b;
+    border: 1px solid #333;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 12px;
+}
+
+.card p {
+    color: #aaa;
+    margin-top: 8px;
+    font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="header">
+    <div class="logo">TAP CRIMINAL</div>
+    <div class="level" id="level">LEVEL 1</div>
+</header>
+
+<div class="profile">
+    <h2 id="username">Criminal</h2>
+    <p>Построй свою империю</p>
+</div>
+
+<!-- GAME -->
+
+<section class="page active" id="game">
+
+    <div class="balance">
+        <small>ТВОЙ БАЛАНС</small>
+        <div class="money">$<span id="money">0</span></div>
+    </div>
+
+    <div class="tap-area">
+        <button class="tap-button" id="tap">
+            $
+            <span>TAP</span>
+        </button>
+    </div>
+
+    <div class="energy">
+        <div class="energy-info">
+            <span>⚡ Энергия</span>
+            <span id="energyText">1000 / 1000</span>
+        </div>
+
+        <div class="energy-bar">
+            <div class="energy-fill" id="energyFill"></div>
+        </div>
+    </div>
+
+    <h2 class="section-title">📊 Статистика</h2>
+
+    <div class="card">
+        <h3>💰 Доход за тап</h3>
+        <p id="power">+1 $ за нажатие</p>
+    </div>
+
+    <div class="card">
+        <h3>🏆 Всего заработано</h3>
+        <p id="earned">$0</p>
+    </div>
+
+</section>
+
+<!-- SHOP -->
+
+<section class="page" id="shop">
+
+    <h2 class="section-title">🏪 Магазин</h2>
+
+    <div class="shop-item">
+        <div class="shop-icon">👔</div>
+        <div class="shop-info">
+            <h3>Криминальный авторитет</h3>
+            <p>Увеличивает доход за тап</p>
+        </div>
+        <button class="buy" id="buyPower">
+            $<span id="powerCost">100</span>
+        </button>
+    </div>
+
+    <div class="shop-item">
+        <div class="shop-icon">⚡</div>
+        <div class="shop-info">
+            <h3>Энергетик</h3>
+            <p>Увеличивает запас энергии</p>
+        </div>
+        <button class="buy" id="buyEnergy">
+            $<span id="energyCost">200</span>
+        </button>
+    </div>
+
+    <div class="shop-item">
+        <div class="shop-icon">🏢</div>
+        <div class="shop-info">
+            <h3>Бизнес</h3>
+            <p>Пассивный доход +1 $/сек</p>
+        </div>
+        <button class="buy" id="buyBusiness">
+            $<span id="businessCost">500</span>
+        </button>
+    </div>
+
+</section>
+
+<!-- PROFILE -->
+
+<section class="page" id="profile">
+
+    <h2 class="section-title">👤 Профиль</h2>
+
+    <div class="card">
+        <h3 id="profileName">Criminal</h3>
+        <p>Уровень: <span id="profileLevel">1</span></p>
+        <p>Баланс: $<span id="profileMoney">0</span></p>
+        <p>Сила тапа: <span id="profilePower">1</span></p>
+        <p>Бизнесов: <span id="profileBusiness">0</span></p>
+    </div>
+
+    <div class="card">
+        <h3>🔫 TAP CRIMINAL</h3>
+        <p>Твоя империя только начинается.</p>
+    </div>
+
+</section>
+
+</div>
+
+<nav class="nav">
+    <button class="active" onclick="openPage('game',this)">💰<br>Игра</button>
+    <button onclick="openPage('shop',this)">🏪<br>Магазин</button>
+    <button onclick="openPage('profile',this)">👤<br>Профиль</button>
+</nav>
+
+<script>
+const tg = window.Telegram?.WebApp;
+
+if (tg) {
+    tg.ready();
+    tg.expand();
+}
+
+const saved = JSON.parse(localStorage.getItem("tapCriminal"));
+
+let data = saved || {
+    money: 0,
+    energy: 1000,
+    maxEnergy: 1000,
+    power: 1,
+    earned: 0,
+    businesses: 0,
+    powerCost: 100,
+    energyCost: 200,
+    businessCost: 500
+};
+
+const $ = id => document.getElementById(id);
+
+const user = tg?.initDataUnsafe?.user;
+
+if (user) {
+    $("username").textContent =
+        user.first_name || "Criminal";
+
+    $("profileName").textContent =
+        user.first_name || "Criminal";
+}
+
+function save() {
+    localStorage.setItem(
+        "tapCriminal",
+        JSON.stringify(data)
+    );
+}
+
+function level() {
+    return Math.floor(data.earned / 1000) + 1;
+}
+
+function render() {
+    $("money").textContent = Math.floor(data.money).toLocaleString("ru-RU");
+    $("energyText").textContent =
+        `${Math.floor(data.energy)} / ${data.maxEnergy}`;
+
+    $("energyFill").style.width =
+        (data.energy / data.maxEnergy * 100) + "%";
+
+    $("power").textContent =
+        "+" + data.power + " $ за нажатие";
+
+    $("earned").textContent =
+        "$" + Math.floor(data.earned).toLocaleString("ru-RU");
+
+    $("level").textContent = "LEVEL " + level();
+
+    $("powerCost").textContent = data.powerCost;
+    $("energyCost").textContent = data.energyCost;
+    $("businessCost").textContent = data.businessCost;
+
+    $("profileLevel").textContent = level();
+    $("profileMoney").textContent = Math.floor(data.money);
+    $("profilePower").textContent = data.power;
+    $("profileBusiness").textContent = data.businesses;
+
+    save();
+}
+
+function openPage(id, button) {
+    document.querySelectorAll(".page")
+        .forEach(p => p.classList.remove("active"));
+
+    $(id).classList.add("active");
+
+    document.querySelectorAll(".nav button")
+        .forEach(b => b.classList.remove("active"));
+
+    button.classList.add("active");
+}
+
+$("tap").addEventListener("pointerdown", e => {
+    if (data.energy < 1) return;
+
+    data.energy -= 1;
+    data.money += data.power;
+    data.earned += data.power;
+
+    const float = document.createElement("div");
+    float.className = "float";
+    float.textContent = "+" + data.power + "$";
+
+    float.style.left = e.clientX + "px";
+    float.style.top = e.clientY + "px";
+
+    document.body.appendChild(float);
+
+    setTimeout(() => float.remove(), 700);
+
+    render();
+});
+
+$("buyPower").onclick = () => {
+    if (data.money < data.powerCost) return;
+
+    data.money -= data.powerCost;
+    data.power++;
+    data.powerCost = Math.floor(data.powerCost * 1.7);
+
+    render();
+};
+
+$("buyEnergy").onclick = () => {
+    if (data.money < data.energyCost) return;
+
+    data.money -= data.energyCost;
+    data.maxEnergy += 500;
+    data.energy = data.maxEnergy;
+    data.energyCost = Math.floor(data.energyCost * 1.8);
+
+    render();
+};
+
+$("buyBusiness").onclick = () => {
+    if (data.money < data.businessCost) return;
+
+    data.money -= data.businessCost;
+    data.businesses++;
+    data.businessCost = Math.floor(data.businessCost * 1.8);
+
+    render();
+};
+
+// Восстановление энергии
+
+setInterval(() => {
+    if (data.energy < data.maxEnergy) {
+        data.energy = Math.min(
+            data.maxEnergy,
+            data.energy + 1
+        );
+
+        render();
+    }
+}, 1000);
+
+// Пассивный доход
+
+setInterval(() => {
+    if (data.businesses > 0) {
+        const income = data.businesses;
+
+        data.money += income;
+        data.earned += income;
+
+        render();
+    }
+}, 1000);
+
+render();
+</script>
+
+</body>
+</html>
